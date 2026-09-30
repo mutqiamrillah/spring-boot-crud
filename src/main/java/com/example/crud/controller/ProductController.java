@@ -26,15 +26,23 @@ public class ProductController {
     }
 
     /**
-     * GET /api/products — Ambil semua produk (dengan pagination)
-     * Query params: page, size, sort (contoh: ?page=0&size=10&sort=name,asc)
+     * GET /api/products — Ambil semua produk (dengan pagination dan pencarian)
+     * Query params: q, page, size, sort (contoh: ?q=buku&page=0&size=10)
      */
     @GetMapping
-    @Operation(summary = "Ambil semua produk", description = "Mendapatkan daftar semua produk dengan pagination dan sorting")
+    @Operation(summary = "Ambil semua produk", description = "Mendapatkan daftar semua produk dengan pagination, sorting, dan pencarian opsional (q)")
     public ResponseEntity<ApiResponse<Page<ProductResponse>>> getAllProducts(
+            @RequestParam(value = "q", required = false) String q,
             @PageableDefault(size = 10, sort = "id") Pageable pageable) {
-        Page<ProductResponse> products = productService.getAllProducts(pageable);
-        return ResponseEntity.ok(ApiResponse.success("Berhasil mengambil semua produk", products));
+        
+        Page<ProductResponse> products;
+        if (q != null && !q.trim().isEmpty()) {
+            products = productService.searchProducts(q, pageable);
+        } else {
+            products = productService.getAllProducts(pageable);
+        }
+        
+        return ResponseEntity.ok(ApiResponse.success("Berhasil mengambil produk", products));
     }
 
     /**
